@@ -20,10 +20,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 
 // Schemas
-import { contactFormSchema, contactFormDataSources, jobApplicationSchema } from './schemas';
+import {
+  contactFormSchema,
+  contactFormDataSources,
+  jobApplicationSchema,
+  teamRegistrationSchema,
+  teamRegistrationDataSources,
+  developerProfileSchema,
+  developerProfileDataSources,
+} from './schemas';
 
 // Icons
-import { Send, RotateCcw, FileText, Briefcase, Check, Github, Sparkles } from 'lucide-react';
+import { Send, RotateCcw, FileText, Briefcase, Check, Github, Sparkles, Users, Code2 } from 'lucide-react';
 
 // Create field registry with our components
 const registry = createFieldRegistry({
@@ -41,15 +49,29 @@ const registry = createFieldRegistry({
   objectField: ObjectFieldWrapper,
 });
 
-type FormType = 'contact' | 'job';
+type FormType = 'contact' | 'job' | 'team' | 'developer';
 
 function App() {
   const [activeForm, setActiveForm] = useState<FormType>('contact');
   const [submittedData, setSubmittedData] = useState<unknown>(null);
 
-  // Get active schema
-  const schema = activeForm === 'contact' ? contactFormSchema : jobApplicationSchema;
-  const dataSources = activeForm === 'contact' ? contactFormDataSources : {};
+  // Get active schema and data sources
+  const getSchemaAndDataSources = () => {
+    switch (activeForm) {
+      case 'contact':
+        return { schema: contactFormSchema, dataSources: contactFormDataSources };
+      case 'job':
+        return { schema: jobApplicationSchema, dataSources: {} };
+      case 'team':
+        return { schema: teamRegistrationSchema, dataSources: teamRegistrationDataSources };
+      case 'developer':
+        return { schema: developerProfileSchema, dataSources: developerProfileDataSources };
+      default:
+        return { schema: contactFormSchema, dataSources: contactFormDataSources };
+    }
+  };
+
+  const { schema, dataSources } = getSchemaAndDataSources();
 
   // Use auto form hook
   const { form } = useAutoForm({
@@ -113,6 +135,22 @@ function App() {
             <Briefcase className="h-4 w-4" />
             Job Application
           </Button>
+          <Button
+            variant={activeForm === 'team' ? 'default' : 'outline'}
+            onClick={() => handleFormChange('team')}
+            className="gap-2"
+          >
+            <Users className="h-4 w-4" />
+            Team Registration
+          </Button>
+          <Button
+            variant={activeForm === 'developer' ? 'default' : 'outline'}
+            onClick={() => handleFormChange('developer')}
+            className="gap-2"
+          >
+            <Code2 className="h-4 w-4" />
+            Developer Profile
+          </Button>
         </nav>
 
         {/* Main content */}
@@ -124,16 +162,32 @@ function App() {
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle className="text-xl">
-                      {activeForm === 'contact' ? 'Contact Form' : 'Job Application Form'}
+                      {activeForm === 'contact'
+                        ? 'Contact Form'
+                        : activeForm === 'job'
+                          ? 'Job Application Form'
+                          : activeForm === 'team'
+                            ? 'Team Registration Form'
+                            : 'Developer Profile'}
                     </CardTitle>
                     <CardDescription className="mt-1.5">
                       {activeForm === 'contact'
                         ? 'Demonstrates async data loading, conditional fields, and validation.'
-                        : 'Demonstrates nested objects, array fields, and complex validation.'}
+                        : activeForm === 'job'
+                          ? 'Demonstrates nested objects, array fields, and complex validation.'
+                          : activeForm === 'team'
+                            ? 'Demonstrates deeply nested structures, async APIs, and dependent fields.'
+                            : '🔥 Showcases 5 real APIs: GitHub, NPM, REST Countries, Linguist, PokeAPI'}
                     </CardDescription>
                   </div>
                   <Badge variant="outline" className="shrink-0">
-                    {activeForm === 'contact' ? '9 fields' : '11 fields'}
+                    {activeForm === 'contact'
+                      ? '9 fields'
+                      : activeForm === 'job'
+                        ? '11 fields'
+                        : activeForm === 'team'
+                          ? '8 sections'
+                          : '6 APIs'}
                   </Badge>
                 </div>
               </CardHeader>

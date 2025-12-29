@@ -427,11 +427,6 @@ interface PokemonListResponse {
   results: Pokemon[];
 }
 
-interface GitHubLanguage {
-  name: string;
-  color: string | null;
-}
-
 /**
  * Data sources configuration using multiple real public APIs
  */

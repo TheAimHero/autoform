@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import { forwardRef } from 'react';
 import type { FieldComponentProps } from '@autoform/core';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';

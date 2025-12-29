@@ -1,4 +1,3 @@
-import React from 'react';
 import type { ObjectFieldComponentProps } from '@autoform/core';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -7,7 +6,7 @@ import { cn } from '@/lib/utils';
  * Object field wrapper component using Shadcn UI
  */
 export function ObjectFieldWrapper({
-  name,
+  name: _name,
   label,
   description,
   children,

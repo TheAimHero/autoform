@@ -173,20 +173,20 @@ const mockCities: Record<string, Array<{ id: string; name: string }>> = {
  */
 export const contactFormDataSources: DataSourcesConfig = {
   countries: {
-    fetch: async ({ signal }) => {
+    fetch: async () => {
       // Simulate API delay
       await new Promise((resolve) => setTimeout(resolve, 500));
       return mockCountries;
     },
     transform: (data) =>
-      data.map((country) => ({
+      (data as typeof mockCountries).map((country) => ({
         label: country.name,
         value: country.id,
       })),
     staleTime: 60000, // 1 minute
   },
   cities: {
-    fetch: async ({ dependencies, searchQuery, signal }) => {
+    fetch: async ({ dependencies, searchQuery }) => {
       // Simulate API delay
       await new Promise((resolve) => setTimeout(resolve, 300));
 
@@ -204,7 +204,7 @@ export const contactFormDataSources: DataSourcesConfig = {
       return cities;
     },
     transform: (data) =>
-      data.map((city) => ({
+      (data as Array<{ id: string; name: string }>).map((city) => ({
         label: city.name,
         value: city.id,
       })),

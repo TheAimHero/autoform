@@ -1,4 +1,3 @@
-import React from 'react';
 import type { ArrayFieldComponentProps } from '@autoform/core';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -10,7 +9,7 @@ import { Plus, ArrowUp, ArrowDown, X } from 'lucide-react';
  * Array field wrapper component using Shadcn UI
  */
 export function ArrayFieldWrapper({
-  name,
+  name: _name,
   label,
   description,
   fields,

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AutoForm, useAutoForm, createFieldRegistry } from '@autoform/core';
+import { AutoForm, useAutoForm, createFieldRegistry, FieldComponent } from '@autoform/core';
 
 // Field components
 import {
@@ -18,7 +18,6 @@ import { ArrayFieldWrapper, ObjectFieldWrapper } from './components/wrappers';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 
 // Schemas
 import { contactFormSchema, contactFormDataSources, jobApplicationSchema } from './schemas';
@@ -29,14 +28,14 @@ import { Send, RotateCcw, FileText, Briefcase, Check, Github, Sparkles } from 'l
 // Create field registry with our components
 const registry = createFieldRegistry({
   fields: {
-    text: TextField,
-    email: TextField,
-    password: TextField,
-    number: NumberField,
-    textarea: TextAreaField,
-    select: SelectField,
-    checkbox: CheckboxField,
-    autocomplete: AutocompleteField,
+    text: TextField as FieldComponent,
+    email: TextField as FieldComponent,
+    password: TextField as FieldComponent,
+    number: NumberField as FieldComponent,
+    textarea: TextAreaField as FieldComponent,
+    select: SelectField as FieldComponent,
+    checkbox: CheckboxField as FieldComponent,
+    autocomplete: AutocompleteField as FieldComponent,
   },
   arrayField: ArrayFieldWrapper,
   objectField: ObjectFieldWrapper,
@@ -182,7 +181,7 @@ function App() {
             </Card>
 
             {/* Submitted Data */}
-            {submittedData && (
+            {submittedData !== null && (
               <Card className="border-success/50 bg-success/5 animate-fade-in">
                 <CardHeader className="pb-3">
                   <div className="flex items-center gap-2">

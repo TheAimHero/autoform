@@ -1,4 +1,4 @@
-import React, { forwardRef, useState, useRef, useEffect } from 'react';
+import { forwardRef, useState, useEffect } from 'react';
 import type { FieldComponentProps } from '@autoform/core';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -96,7 +96,7 @@ export const AutocompleteField = forwardRef<HTMLButtonElement, FieldComponentPro
                 {selectedOption ? selectedOption.label : placeholder || 'Select...'}
               </span>
               <div className="flex items-center gap-1 ml-2 shrink-0">
-                {value && !state.isDisabled && !state.isReadOnly && (
+                {value !== undefined && !state.isDisabled && !state.isReadOnly && (
                   <X
                     className="h-4 w-4 opacity-50 hover:opacity-100 cursor-pointer"
                     onClick={handleClear}

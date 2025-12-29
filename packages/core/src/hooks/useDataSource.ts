@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useWatch } from 'react-hook-form';
 import type { Control } from 'react-hook-form';
 import type {
@@ -20,6 +20,11 @@ interface CacheEntry {
  * Global cache
  */
 const cache = new Map<string, CacheEntry>();
+
+/**
+ * Track in-flight requests to prevent duplicate fetches
+ */
+const inFlightRequests = new Map<string, Promise<FieldOption[]>>();
 
 /**
  * Default stale time
@@ -102,6 +107,10 @@ export function useDataSource<TValue = unknown>(
     error: null,
   });
 
+  // Store config in a ref to avoid recreating fetchData on config changes
+  const configRef = useRef(config);
+  configRef.current = config;
+
   // Watch dependent fields
   const dependencyValues = useWatch({
     control,
@@ -109,14 +118,15 @@ export function useDataSource<TValue = unknown>(
     disabled: !control || dependsOn.length === 0,
   });
 
-  // Create dependencies object
-  const dependencies = dependsOn.reduce(
-    (acc, name, index) => {
-      acc[name] = Array.isArray(dependencyValues) ? dependencyValues[index] : dependencyValues;
-      return acc;
-    },
-    {} as Record<string, unknown>
-  );
+  // Memoize dependencies object to prevent unnecessary re-renders
+  const dependenciesKey = useMemo(() => {
+    if (dependsOn.length === 0) return '';
+    const deps: Record<string, unknown> = {};
+    dependsOn.forEach((name, index) => {
+      deps[name] = Array.isArray(dependencyValues) ? dependencyValues[index] : dependencyValues;
+    });
+    return JSON.stringify(deps);
+  }, [dependsOn, dependencyValues]);
 
   // Abort controller ref
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -127,31 +137,70 @@ export function useDataSource<TValue = unknown>(
   // Search query ref
   const searchQueryRef = useRef<string>('');
 
-  // Fetch data function
+  // Track if component is mounted
+  const isMountedRef = useRef(true);
+
+  // Track the last fetch key to prevent duplicate concurrent fetches
+  const lastFetchKeyRef = useRef<string | null>(null);
+
+  // Track if initial fetch is in progress
+  const isFetchingRef = useRef(false);
+
+  // Fetch data function - uses refs for stability
   const fetchData = useCallback(
     async (searchQuery?: string) => {
       if (!enabled) return;
 
-      const staleTime = config.staleTime ?? DEFAULT_STALE_TIME;
+      const currentConfig = configRef.current;
+      const staleTime = currentConfig.staleTime ?? DEFAULT_STALE_TIME;
+      const dependencies = dependenciesKey ? JSON.parse(dependenciesKey) : undefined;
+
       const params: DataSourceFetchParams = {
-        dependencies: dependsOn.length > 0 ? dependencies : undefined,
+        dependencies,
         searchQuery,
       };
 
       // Check custom cache key
-      const cacheKeyFn = config.cacheKey || ((p) => generateCacheKey(sourceKey, p));
+      const cacheKeyFn = currentConfig.cacheKey || ((p) => generateCacheKey(sourceKey, p));
       const cacheKey = cacheKeyFn(params);
 
-      // Check cache
+      // Check cache first
       const cached = cache.get(cacheKey);
       if (cached && Date.now() - cached.timestamp < staleTime) {
-        setState({
-          options: cached.data as FieldOption<TValue>[],
-          isLoading: false,
-          error: null,
-        });
+        if (isMountedRef.current) {
+          setState({
+            options: cached.data as FieldOption<TValue>[],
+            isLoading: false,
+            error: null,
+          });
+        }
         return;
       }
+
+      // Check if there's already an in-flight request for this key
+      const existingRequest = inFlightRequests.get(cacheKey);
+      if (existingRequest) {
+        try {
+          const options = await existingRequest;
+          if (isMountedRef.current) {
+            setState({
+              options: options as FieldOption<TValue>[],
+              isLoading: false,
+              error: null,
+            });
+          }
+        } catch {
+          // Error handled by the original request
+        }
+        return;
+      }
+
+      // Prevent duplicate fetch for same key
+      if (lastFetchKeyRef.current === cacheKey) {
+        return;
+      }
+      lastFetchKeyRef.current = cacheKey;
+      isFetchingRef.current = true;
 
       // Cancel previous request
       if (abortControllerRef.current) {
@@ -159,15 +208,24 @@ export function useDataSource<TValue = unknown>(
       }
       abortControllerRef.current = new AbortController();
 
-      setState((prev) => ({ ...prev, isLoading: true, error: null }));
+      if (isMountedRef.current) {
+        setState((prev) => ({ ...prev, isLoading: true, error: null }));
+      }
+
+      // Create the fetch promise
+      const fetchPromise = (async () => {
+        const data = await currentConfig.fetch({
+          ...params,
+          signal: abortControllerRef.current!.signal,
+        });
+        return currentConfig.transform(data) as FieldOption[];
+      })();
+
+      // Track the in-flight request
+      inFlightRequests.set(cacheKey, fetchPromise);
 
       try {
-        const data = await config.fetch({
-          ...params,
-          signal: abortControllerRef.current.signal,
-        });
-
-        const options = config.transform(data) as FieldOption<TValue>[];
+        const options = await fetchPromise;
 
         // Update cache
         cache.set(cacheKey, {
@@ -175,11 +233,13 @@ export function useDataSource<TValue = unknown>(
           timestamp: Date.now(),
         });
 
-        setState({
-          options,
-          isLoading: false,
-          error: null,
-        });
+        if (isMountedRef.current) {
+          setState({
+            options: options as FieldOption<TValue>[],
+            isLoading: false,
+            error: null,
+          });
+        }
       } catch (error) {
         // Ignore abort errors
         if (error instanceof Error && error.name === 'AbortError') {
@@ -188,18 +248,28 @@ export function useDataSource<TValue = unknown>(
 
         const errorObj = error instanceof Error ? error : new Error(String(error));
 
-        if (config.onError) {
-          config.onError(errorObj);
+        if (currentConfig.onError) {
+          currentConfig.onError(errorObj);
         }
 
-        setState((prev) => ({
-          ...prev,
-          isLoading: false,
-          error: errorObj,
-        }));
+        if (isMountedRef.current) {
+          setState((prev) => ({
+            ...prev,
+            isLoading: false,
+            error: errorObj,
+          }));
+        }
+      } finally {
+        // Remove from in-flight requests
+        inFlightRequests.delete(cacheKey);
+        // Clear the last fetch key so future fetches can proceed
+        if (lastFetchKeyRef.current === cacheKey) {
+          lastFetchKeyRef.current = null;
+        }
+        isFetchingRef.current = false;
       }
     },
-    [config, sourceKey, dependencies, dependsOn, enabled]
+    [sourceKey, dependenciesKey, enabled]
   );
 
   // Debounced search handler
@@ -207,7 +277,7 @@ export function useDataSource<TValue = unknown>(
     (query: string) => {
       searchQueryRef.current = query;
 
-      const debounceMs = config.debounceMs ?? DEFAULT_DEBOUNCE_MS;
+      const debounceMs = configRef.current.debounceMs ?? DEFAULT_DEBOUNCE_MS;
 
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
@@ -217,21 +287,35 @@ export function useDataSource<TValue = unknown>(
         fetchData(query);
       }, debounceMs);
     },
-    [fetchData, config.debounceMs]
+    [fetchData]
   );
 
   // Refetch function
   const refetch = useCallback(() => {
+    // Clear the last fetch key to allow refetch
+    lastFetchKeyRef.current = null;
     fetchData(searchQueryRef.current);
   }, [fetchData]);
 
+  // Track previous dependencies key for change detection
+  const prevDependenciesKeyRef = useRef<string>('');
+
   // Fetch on mount and when dependencies change
   useEffect(() => {
-    if (fetchOnMount && enabled) {
+    isMountedRef.current = true;
+
+    const shouldFetchOnMount = fetchOnMount && enabled && !isFetchingRef.current;
+    const dependenciesChanged = dependenciesKey !== prevDependenciesKeyRef.current;
+
+    if (shouldFetchOnMount || (dependenciesChanged && dependsOn.length > 0)) {
+      prevDependenciesKeyRef.current = dependenciesKey;
+      // Clear the last fetch key to allow fetch
+      lastFetchKeyRef.current = null;
       fetchData();
     }
 
     return () => {
+      isMountedRef.current = false;
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
@@ -239,7 +323,7 @@ export function useDataSource<TValue = unknown>(
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [fetchData, fetchOnMount, enabled, JSON.stringify(dependencies)]);
+  }, [fetchOnMount, enabled, fetchData, dependenciesKey, dependsOn.length]);
 
   return {
     options: state.options,

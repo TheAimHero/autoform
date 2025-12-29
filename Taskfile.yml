@@ -1,0 +1,262 @@
+version: "3"
+
+vars:
+  CORE_PKG: packages/core
+  PLAYGROUND_PKG: packages/playground
+
+tasks:
+  # ============================================
+  # Setup & Installation
+  # ============================================
+  
+  install:
+    desc: Install all dependencies
+    cmds:
+      - pnpm install
+
+  clean:
+    desc: Clean all build artifacts and node_modules
+    cmds:
+      - rm -rf node_modules
+      - rm -rf {{.CORE_PKG}}/node_modules
+      - rm -rf {{.CORE_PKG}}/dist
+      - rm -rf {{.PLAYGROUND_PKG}}/node_modules
+      - rm -rf {{.PLAYGROUND_PKG}}/dist
+
+  clean:dist:
+    desc: Clean only build artifacts
+    cmds:
+      - rm -rf {{.CORE_PKG}}/dist
+      - rm -rf {{.PLAYGROUND_PKG}}/dist
+
+  # ============================================
+  # Development
+  # ============================================
+
+  dev:
+    desc: Start the playground development server
+    cmds:
+      - pnpm --filter playground dev
+
+  dev:core:
+    desc: Watch and rebuild core library on changes
+    cmds:
+      - pnpm --filter @autoform/core dev
+
+  dev:all:
+    desc: Run both core watch and playground dev in parallel
+    deps:
+      - dev:core
+      - dev
+
+  # ============================================
+  # Building
+  # ============================================
+
+  build:
+    desc: Build the core library
+    cmds:
+      - pnpm --filter @autoform/core build
+
+  build:playground:
+    desc: Build the playground app
+    deps:
+      - build
+    cmds:
+      - pnpm --filter playground build
+
+  build:all:
+    desc: Build all packages
+    cmds:
+      - pnpm -r build
+
+  # ============================================
+  # Code Quality - Formatting
+  # ============================================
+
+  format:
+    desc: Format all files with Prettier
+    cmds:
+      - pnpm exec prettier --write "packages/**/*.{ts,tsx,json,css,md}"
+
+  format:check:
+    desc: Check formatting without making changes
+    cmds:
+      - pnpm exec prettier --check "packages/**/*.{ts,tsx,json,css,md}"
+
+  format:core:
+    desc: Format core package only
+    cmds:
+      - pnpm exec prettier --write "{{.CORE_PKG}}/src/**/*.{ts,tsx}"
+
+  format:playground:
+    desc: Format playground package only
+    cmds:
+      - pnpm exec prettier --write "{{.PLAYGROUND_PKG}}/src/**/*.{ts,tsx,css}"
+
+  # ============================================
+  # Code Quality - Linting
+  # ============================================
+
+  lint:
+    desc: Run ESLint on all packages
+    cmds:
+      - pnpm exec eslint "packages/**/*.{ts,tsx}" --fix
+
+  lint:check:
+    desc: Check linting without fixing
+    cmds:
+      - pnpm exec eslint "packages/**/*.{ts,tsx}"
+
+  lint:core:
+    desc: Lint core package only
+    cmds:
+      - pnpm exec eslint "{{.CORE_PKG}}/src/**/*.{ts,tsx}" --fix
+
+  lint:playground:
+    desc: Lint playground package only
+    cmds:
+      - pnpm exec eslint "{{.PLAYGROUND_PKG}}/src/**/*.{ts,tsx}" --fix
+
+  # ============================================
+  # Code Quality - Type Checking
+  # ============================================
+
+  typecheck:
+    desc: Run TypeScript type checking on all packages
+    cmds:
+      - pnpm --filter @autoform/core exec tsc --noEmit
+      - pnpm --filter playground exec tsc --noEmit
+
+  typecheck:core:
+    desc: Type check core package only
+    cmds:
+      - pnpm --filter @autoform/core exec tsc --noEmit
+
+  typecheck:playground:
+    desc: Type check playground package only
+    cmds:
+      - pnpm --filter playground exec tsc --noEmit
+
+  # ============================================
+  # Testing
+  # ============================================
+
+  test:
+    desc: Run all tests
+    cmds:
+      - pnpm --filter @autoform/core test
+
+  test:watch:
+    desc: Run tests in watch mode
+    cmds:
+      - pnpm --filter @autoform/core test:watch
+
+  test:coverage:
+    desc: Run tests with coverage report
+    cmds:
+      - pnpm --filter @autoform/core exec vitest run --coverage
+
+  # ============================================
+  # Combined Quality Checks
+  # ============================================
+
+  check:
+    desc: Run all quality checks (format, lint, typecheck)
+    cmds:
+      - task: format:check
+      - task: lint:check
+      - task: typecheck
+
+  fix:
+    desc: Fix all auto-fixable issues (format, lint)
+    cmds:
+      - task: format
+      - task: lint
+
+  ci:
+    desc: Run all CI checks (format, lint, typecheck, test, build)
+    cmds:
+      - task: format:check
+      - task: lint:check
+      - task: typecheck
+      - task: test
+      - task: build
+
+  # ============================================
+  # Publishing
+  # ============================================
+
+  version:patch:
+    desc: Bump patch version of core package
+    dir: "{{.CORE_PKG}}"
+    cmds:
+      - npm version patch
+
+  version:minor:
+    desc: Bump minor version of core package
+    dir: "{{.CORE_PKG}}"
+    cmds:
+      - npm version minor
+
+  version:major:
+    desc: Bump major version of core package
+    dir: "{{.CORE_PKG}}"
+    cmds:
+      - npm version major
+
+  publish:
+    desc: Publish core package to npm (requires login)
+    deps:
+      - ci
+    dir: "{{.CORE_PKG}}"
+    cmds:
+      - npm publish --access public
+
+  publish:dry:
+    desc: Dry run of publishing (see what would be published)
+    deps:
+      - build
+    dir: "{{.CORE_PKG}}"
+    cmds:
+      - npm publish --dry-run
+
+  # ============================================
+  # Utilities
+  # ============================================
+
+  preview:
+    desc: Preview the built playground
+    deps:
+      - build:playground
+    cmds:
+      - pnpm --filter playground preview
+
+  deps:update:
+    desc: Update all dependencies interactively
+    cmds:
+      - pnpm update -i -r
+
+  deps:outdated:
+    desc: Check for outdated dependencies
+    cmds:
+      - pnpm outdated -r
+
+  size:
+    desc: Check bundle size of core package
+    deps:
+      - build
+    cmds:
+      - echo "Core package bundle sizes:"
+      - ls -lh {{.CORE_PKG}}/dist/*.js
+      - ls -lh {{.CORE_PKG}}/dist/*.cjs
+
+  # ============================================
+  # Default task
+  # ============================================
+
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
+

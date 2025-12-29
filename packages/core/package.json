@@ -1,0 +1,62 @@
+{
+  "name": "@autoform/core",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "clean": "rm -rf dist",
+    "lint": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0",
+    "react-hook-form": ">=7.0.0",
+    "zod": ">=3.0.0",
+    "@hookform/resolvers": ">=3.0.0"
+  },
+  "dependencies": {
+    "jotai": "^2.6.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.48",
+    "@types/react-dom": "^18.2.18",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.49.3",
+    "zod": "^3.22.4",
+    "@hookform/resolvers": "^3.3.4",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.2",
+    "@testing-library/react": "^14.1.2"
+  },
+  "keywords": [
+    "react",
+    "form",
+    "json-schema",
+    "react-hook-form",
+    "zod",
+    "autoform"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/auto-form"
+  }
+}

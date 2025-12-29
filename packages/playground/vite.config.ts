@@ -5,7 +5,7 @@ import { resolve } from "path";
 export default defineConfig({
   plugins: [react()],
   // Set base path for GitHub Pages deployment
-  base: process.env.GITHUB_PAGES ? "/auto-form/" : "/",
+  base: process.env.GITHUB_PAGES ? "/autoform/" : "/",
   resolve: {
     alias: {
       "@": resolve(__dirname, "./src"),

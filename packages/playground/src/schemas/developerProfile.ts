@@ -2,7 +2,7 @@ import type { AutoFormSchema, DataSourcesConfig } from '@autoform/core';
 
 /**
  * Developer Profile schema - showcases multiple async data sources from real public APIs
- * 
+ *
  * APIs used:
  * - GitHub API (https://api.github.com) - user search, repository search
  * - NPM Registry (https://registry.npmjs.org) - package search
@@ -553,10 +553,9 @@ export const developerProfileDataSources: DataSourcesConfig = {
     fetch: async ({ signal }) => {
       console.log('🌍 Fetching countries from REST Countries API...');
 
-      const response = await fetch(
-        'https://restcountries.com/v3.1/all?fields=name,cca2,flag',
-        { signal }
-      );
+      const response = await fetch('https://restcountries.com/v3.1/all?fields=name,cca2,flag', {
+        signal,
+      });
 
       if (!response.ok) {
         throw new Error('Failed to fetch countries');
@@ -663,4 +662,3 @@ function getStaticLanguages(): string[] {
     'Lua',
   ];
 }
-

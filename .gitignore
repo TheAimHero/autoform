@@ -6,6 +6,12 @@ dist/
 build/
 *.tsbuildinfo
 
+# Generated files in src directories
+**/src/**/*.js
+**/src/**/*.js.map
+**/src/**/*.d.ts
+**/src/**/*.d.ts.map
+
 # Logs
 logs/
 *.log

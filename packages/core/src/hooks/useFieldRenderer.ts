@@ -1,15 +1,10 @@
-import { useMemo } from "react";
-import { useController, useWatch } from "react-hook-form";
-import type { Control } from "react-hook-form";
-import type {
-  FieldDefinition,
-  FieldComponentProps,
-  FieldState,
-  FieldOption,
-} from "../types";
-import type { FieldRegistry } from "../registry";
-import { useDataSource } from "./useDataSource";
-import type { DataSourcesConfig } from "../types";
+import { useMemo } from 'react';
+import { useController, useWatch } from 'react-hook-form';
+import type { Control } from 'react-hook-form';
+import type { FieldDefinition, FieldComponentProps, FieldState, FieldOption } from '../types';
+import type { FieldRegistry } from '../registry';
+import { useDataSource } from './useDataSource';
+import type { DataSourcesConfig } from '../types';
 
 /**
  * Options for useFieldRenderer hook
@@ -80,8 +75,8 @@ export interface UseFieldRendererResult {
  * Evaluate a condition
  */
 function evaluateCondition(
-  condition: FieldDefinition["condition"],
-  formValues: Record<string, unknown>,
+  condition: FieldDefinition['condition'],
+  formValues: Record<string, unknown>
 ): boolean {
   if (!condition) return true;
 
@@ -89,46 +84,26 @@ function evaluateCondition(
   const fieldValue = getNestedValue(formValues, when);
 
   switch (operator) {
-    case "eq":
+    case 'eq':
       return fieldValue === value;
-    case "neq":
+    case 'neq':
       return fieldValue !== value;
-    case "gt":
-      return (
-        typeof fieldValue === "number" &&
-        typeof value === "number" &&
-        fieldValue > value
-      );
-    case "gte":
-      return (
-        typeof fieldValue === "number" &&
-        typeof value === "number" &&
-        fieldValue >= value
-      );
-    case "lt":
-      return (
-        typeof fieldValue === "number" &&
-        typeof value === "number" &&
-        fieldValue < value
-      );
-    case "lte":
-      return (
-        typeof fieldValue === "number" &&
-        typeof value === "number" &&
-        fieldValue <= value
-      );
-    case "in":
+    case 'gt':
+      return typeof fieldValue === 'number' && typeof value === 'number' && fieldValue > value;
+    case 'gte':
+      return typeof fieldValue === 'number' && typeof value === 'number' && fieldValue >= value;
+    case 'lt':
+      return typeof fieldValue === 'number' && typeof value === 'number' && fieldValue < value;
+    case 'lte':
+      return typeof fieldValue === 'number' && typeof value === 'number' && fieldValue <= value;
+    case 'in':
       return Array.isArray(value) && value.includes(fieldValue);
-    case "notIn":
+    case 'notIn':
       return Array.isArray(value) && !value.includes(fieldValue);
-    case "exists":
-      return (
-        fieldValue !== undefined && fieldValue !== null && fieldValue !== ""
-      );
-    case "notExists":
-      return (
-        fieldValue === undefined || fieldValue === null || fieldValue === ""
-      );
+    case 'exists':
+      return fieldValue !== undefined && fieldValue !== null && fieldValue !== '';
+    case 'notExists':
+      return fieldValue === undefined || fieldValue === null || fieldValue === '';
     default:
       return true;
   }
@@ -138,8 +113,8 @@ function evaluateCondition(
  * Get nested value from object by path
  */
 function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
-  return path.split(".").reduce((acc, key) => {
-    if (acc && typeof acc === "object" && key in acc) {
+  return path.split('.').reduce((acc, key) => {
+    if (acc && typeof acc === 'object' && key in acc) {
       return (acc as Record<string, unknown>)[key];
     }
     return undefined;
@@ -149,15 +124,13 @@ function getNestedValue(obj: Record<string, unknown>, path: string): unknown {
 /**
  * Hook for preparing field rendering
  */
-export function useFieldRenderer(
-  hookOptions: UseFieldRendererOptions,
-): UseFieldRendererResult {
+export function useFieldRenderer(hookOptions: UseFieldRendererOptions): UseFieldRendererResult {
   const {
     field,
     control,
     registry,
     dataSources,
-    basePath = "",
+    basePath = '',
     isDisabled = false,
     isReadOnly = false,
   } = hookOptions;
@@ -180,15 +153,12 @@ export function useFieldRenderer(
 
   // Evaluate condition
   const shouldRender = useMemo(
-    () =>
-      evaluateCondition(field.condition, formValues as Record<string, unknown>),
-    [field.condition, formValues],
+    () => evaluateCondition(field.condition, formValues as Record<string, unknown>),
+    [field.condition, formValues]
   );
 
   // Get data source config if needed
-  const dataSourceConfig = field.dataSourceKey
-    ? dataSources[field.dataSourceKey]
-    : undefined;
+  const dataSourceConfig = field.dataSourceKey ? dataSources[field.dataSourceKey] : undefined;
 
   // Use data source if configured
   const dataSourceResult = useDataSource({
@@ -230,7 +200,7 @@ export function useFieldRenderer(
       fieldState.isDirty,
       isReadOnly,
       field.readOnly,
-    ],
+    ]
   );
 
   // Build props for the component
@@ -264,7 +234,7 @@ export function useFieldRenderer(
       fieldState.error,
       dataSourceConfig,
       dataSourceResult.onSearch,
-    ],
+    ]
   );
 
   return {

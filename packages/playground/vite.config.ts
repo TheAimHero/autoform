@@ -1,14 +1,14 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import { resolve } from "path";
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
 
 export default defineConfig({
   plugins: [react()],
   // Set base path for GitHub Pages deployment
-  base: process.env.GITHUB_PAGES ? "/autoform/" : "/",
+  base: process.env.GITHUB_PAGES ? '/autoform/' : '/',
   resolve: {
     alias: {
-      "@": resolve(__dirname, "./src"),
+      '@': resolve(__dirname, './src'),
     },
   },
   server: {

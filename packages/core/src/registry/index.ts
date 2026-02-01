@@ -7,4 +7,4 @@ export {
   validateRegistryForSchema,
   type FieldRegistry,
   type FieldRegistryConfig,
-} from "./fieldRegistry";
+} from './fieldRegistry';

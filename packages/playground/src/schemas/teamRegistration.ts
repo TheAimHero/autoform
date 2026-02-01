@@ -476,7 +476,7 @@ export const teamRegistrationDataSources: DataSourcesConfig = {
   restCountries: {
     fetch: async ({ signal }) => {
       console.log('🌍 Fetching countries from REST Countries API...');
-      
+
       const response = await fetch(
         'https://restcountries.com/v3.1/all?fields=name,cca2,cca3,timezones,flag',
         { signal }
@@ -586,10 +586,9 @@ export const teamRegistrationDataSources: DataSourcesConfig = {
         }
       }
 
-      const response = await fetch(
-        `http://universities.hipolabs.com/search?${params.toString()}`,
-        { signal }
-      );
+      const response = await fetch(`http://universities.hipolabs.com/search?${params.toString()}`, {
+        signal,
+      });
 
       if (!response.ok) {
         throw new Error('Failed to fetch universities');
@@ -610,4 +609,3 @@ export const teamRegistrationDataSources: DataSourcesConfig = {
     staleTime: 60000, // 1 minute
   },
 };
-

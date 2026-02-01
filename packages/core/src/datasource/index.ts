@@ -3,4 +3,4 @@ export {
   createDataSourceManager,
   createDataSourceAtom,
   clearDataSourceCache,
-} from "./manager";
+} from './manager';

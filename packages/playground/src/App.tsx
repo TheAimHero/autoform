@@ -31,7 +31,17 @@ import {
 } from './schemas';
 
 // Icons
-import { Send, RotateCcw, FileText, Briefcase, Check, Github, Sparkles, Users, Code2 } from 'lucide-react';
+import {
+  Send,
+  RotateCcw,
+  FileText,
+  Briefcase,
+  Check,
+  Github,
+  Sparkles,
+  Users,
+  Code2,
+} from 'lucide-react';
 
 // Create field registry with our components
 const registry = createFieldRegistry({

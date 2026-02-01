@@ -1,16 +1,9 @@
-import {
-  memo,
-  useCallback,
-  useMemo,
-  createContext,
-  useContext,
-  ReactNode,
-} from "react";
-import { useFieldArray } from "react-hook-form";
-import type { Control } from "react-hook-form";
-import type { FieldDefinition, DataSourcesConfig, FieldState } from "../types";
-import type { FieldRegistry } from "../registry";
-import { useFieldRenderer } from "../hooks/useFieldRenderer";
+import { memo, useCallback, useMemo, createContext, useContext, ReactNode } from 'react';
+import { useFieldArray } from 'react-hook-form';
+import type { Control } from 'react-hook-form';
+import type { FieldDefinition, DataSourcesConfig, FieldState } from '../types';
+import type { FieldRegistry } from '../registry';
+import { useFieldRenderer } from '../hooks/useFieldRenderer';
 
 /**
  * Props for AutoField component
@@ -37,15 +30,15 @@ const FieldRendererContext = createContext<{
  */
 function getDefaultForType(type?: string): unknown {
   switch (type) {
-    case "number":
+    case 'number':
       return 0;
-    case "checkbox":
-    case "switch":
+    case 'checkbox':
+    case 'switch':
       return false;
-    case "multiselect":
+    case 'multiselect':
       return [];
     default:
-      return "";
+      return '';
   }
 }
 
@@ -80,13 +73,7 @@ function ArrayFieldInternal({
       isDirty: false,
       isReadOnly: isReadOnly || field.readOnly || false,
     }),
-    [
-      isDisabled,
-      field.disabled,
-      field.validation?.required,
-      isReadOnly,
-      field.readOnly,
-    ],
+    [isDisabled, field.disabled, field.validation?.required, isReadOnly, field.readOnly]
   );
 
   const handleAppend = useCallback(
@@ -95,7 +82,7 @@ function ArrayFieldInternal({
         return;
       }
 
-      if (field.itemType === "object" && field.itemFields) {
+      if (field.itemType === 'object' && field.itemFields) {
         const defaultItem: Record<string, unknown> = {};
         for (const itemField of field.itemFields) {
           if (itemField.defaultValue !== undefined) {
@@ -107,7 +94,7 @@ function ArrayFieldInternal({
         append(value ?? getDefaultForType(field.itemType));
       }
     },
-    [append, field.itemType, field.itemFields, field.maxItems, fields.length],
+    [append, field.itemType, field.itemFields, field.maxItems, fields.length]
   );
 
   const handleRemove = useCallback(
@@ -117,21 +104,21 @@ function ArrayFieldInternal({
       }
       remove(index);
     },
-    [remove, field.minItems, fields.length],
+    [remove, field.minItems, fields.length]
   );
 
   const handleMove = useCallback(
     (fromIndex: number, toIndex: number) => {
       move(fromIndex, toIndex);
     },
-    [move],
+    [move]
   );
 
   const renderItem = useCallback(
     (index: number) => {
       const itemPath = `${fieldPath}.${index}`;
 
-      if (field.itemType === "object" && field.itemFields) {
+      if (field.itemType === 'object' && field.itemFields) {
         return (
           <>
             {field.itemFields.map((itemField) =>
@@ -144,7 +131,7 @@ function ArrayFieldInternal({
                 basePath: itemPath,
                 isDisabled: isDisabled || field.disabled,
                 isReadOnly: isReadOnly || field.readOnly,
-              } as AutoFieldProps & { key: string }),
+              } as AutoFieldProps & { key: string })
             )}
           </>
         );
@@ -167,7 +154,7 @@ function ArrayFieldInternal({
 
       const primitiveField: FieldDefinition = {
         name: String(index),
-        type: (field.itemType as FieldDefinition["type"]) || "text",
+        type: (field.itemType as FieldDefinition['type']) || 'text',
         label: `Item ${index + 1}`,
       };
 
@@ -194,7 +181,7 @@ function ArrayFieldInternal({
       isDisabled,
       isReadOnly,
       context,
-    ],
+    ]
   );
 
   if (ArrayWrapper) {
@@ -223,19 +210,13 @@ function ArrayFieldInternal({
       {field.description && <p>{field.description}</p>}
       <div>
         {fields.map((f, index) => (
-          <div
-            key={f.id}
-            style={{ display: "flex", gap: "8px", marginBottom: "8px" }}
-          >
+          <div key={f.id} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
             <div style={{ flex: 1 }}>{renderItem(index)}</div>
             {!state.isDisabled && !state.isReadOnly && (
               <button
                 type="button"
                 onClick={() => handleRemove(index)}
-                disabled={
-                  field.minItems !== undefined &&
-                  fields.length <= field.minItems
-                }
+                disabled={field.minItems !== undefined && fields.length <= field.minItems}
               >
                 Remove
               </button>
@@ -247,9 +228,7 @@ function ArrayFieldInternal({
         <button
           type="button"
           onClick={() => handleAppend()}
-          disabled={
-            field.maxItems !== undefined && fields.length >= field.maxItems
-          }
+          disabled={field.maxItems !== undefined && fields.length >= field.maxItems}
         >
           Add Item
         </button>
@@ -262,15 +241,7 @@ function ArrayFieldInternal({
  * Internal field component
  */
 function FieldInternal(props: AutoFieldProps) {
-  const {
-    field,
-    control,
-    registry,
-    dataSources,
-    basePath,
-    isDisabled,
-    isReadOnly,
-  } = props;
+  const { field, control, registry, dataSources, basePath, isDisabled, isReadOnly } = props;
   const context = useContext(FieldRendererContext);
 
   const { fieldProps, Component, shouldRender, fieldPath } = useFieldRenderer({
@@ -287,7 +258,7 @@ function FieldInternal(props: AutoFieldProps) {
     return null;
   }
 
-  if (field.type === "object" && field.fields) {
+  if (field.type === 'object' && field.fields) {
     const ObjectWrapper = registry.objectField;
 
     const nestedFields = (
@@ -302,7 +273,7 @@ function FieldInternal(props: AutoFieldProps) {
             basePath: fieldPath,
             isDisabled: isDisabled || field.disabled,
             isReadOnly: isReadOnly || field.readOnly,
-          } as AutoFieldProps & { key: string }),
+          } as AutoFieldProps & { key: string })
         )}
       </>
     );
@@ -326,7 +297,7 @@ function FieldInternal(props: AutoFieldProps) {
     return <div className={field.className}>{nestedFields}</div>;
   }
 
-  if (field.type === "array") {
+  if (field.type === 'array') {
     return <ArrayFieldInternal {...props} />;
   }
 
@@ -343,15 +314,10 @@ const MemoizedField = memo(FieldInternal);
  * Provider and entry point for field rendering
  */
 export function FieldRendererProvider({ children }: { children: ReactNode }) {
-  const renderField = useCallback(
-    (props: AutoFieldProps & { key?: string }) => {
-      const { key, ...fieldProps } = props;
-      return (
-        <MemoizedField key={key || fieldProps.field.name} {...fieldProps} />
-      );
-    },
-    [],
-  );
+  const renderField = useCallback((props: AutoFieldProps & { key?: string }) => {
+    const { key, ...fieldProps } = props;
+    return <MemoizedField key={key || fieldProps.field.name} {...fieldProps} />;
+  }, []);
 
   return (
     <FieldRendererContext.Provider value={{ renderField }}>
@@ -367,15 +333,13 @@ export const AutoField = memo(function AutoField(props: AutoFieldProps) {
   return <MemoizedField {...props} />;
 });
 
-AutoField.displayName = "AutoField";
+AutoField.displayName = 'AutoField';
 
 /**
  * AutoFieldArray component - renders an array field
  */
-export const AutoFieldArray = memo(function AutoFieldArray(
-  props: AutoFieldProps,
-) {
+export const AutoFieldArray = memo(function AutoFieldArray(props: AutoFieldProps) {
   return <ArrayFieldInternal {...props} />;
 });
 
-AutoFieldArray.displayName = "AutoFieldArray";
+AutoFieldArray.displayName = 'AutoFieldArray';
